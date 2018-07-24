@@ -1,0 +1,75 @@
+From 6ff93fbd954c9637712f01e19a6f88315f6b00ad Mon Sep 17 00:00:00 2001
+From: Thiakil <xander@thiakil.com>
+Date: Tue, 24 Jul 2018 16:54:35 +0800
+Subject: [PATCH] only cast null to the dest type if there is not 1 match of
+ method name & arg count
+
+
+diff --git a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
+index a2906b1..c502de3 100644
+--- a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
++++ b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
+@@ -534,7 +534,7 @@ public class InvocationExprent extends Exprent {
+ 
+         Exprent param = unboxIfNeeded(lstParameters.get(i));
+         // 'byte' and 'short' literals need an explicit narrowing type cast when used as a parameter
+-        ExprProcessor.getCastedExprent(param, types[i], buff, indent, true, ambiguous, true, tracer);
++        ExprProcessor.getCastedExprent(param, types[i], buff, indent, getMatchedMethodsByNameAndArgCount() != 1, ambiguous, true, tracer);
+ 
+         // the last "new Object[0]" in the vararg call is not printed
+         if (buff.length() > 0) {
+@@ -706,6 +706,51 @@ public class InvocationExprent extends Exprent {
+     return matches;
+   }
+ 
++  private int getMatchedMethodsByNameAndArgCount() {
++    int matches = 0;
++    StructClass cl = DecompilerContext.getStructContext().getClass(classname);
++    if (cl == null) return 0;
++
++    Set<String> visited = new HashSet<>();
++    Queue<StructClass> queue = new ArrayDeque<>();
++    queue.add(cl);
++
++    while (!queue.isEmpty()) {
++      StructClass cls = queue.poll();
++      if (cls == null)
++        return 0;//fail if anything is not found
++
++      for (StructMethod mt : cls.getMethods()) {
++        if (name.equals(mt.getName())) {
++          MethodDescriptor md = MethodDescriptor.parseDescriptor(mt.getDescriptor());
++          if (md.params.length == descriptor.params.length) {
++            matches++;
++          }
++        }
++      }
++
++      visited.add(cls.qualifiedName);
++      if (cls.superClass != null && !visited.contains(cls.superClass.value)) {
++        StructClass tmp = DecompilerContext.getStructContext().getClass((String)cls.superClass.value);
++        if (tmp != null) {
++          queue.add(tmp);
++        }
++      }
++
++      for (String intf : cls.getInterfaceNames()) {
++        if (!visited.contains(intf)) {
++          StructClass tmp = DecompilerContext.getStructContext().getClass(intf);
++          if (tmp != null) {
++            queue.add(tmp);
++          }
++        }
++      }
++
++    }
++
++    return matches;
++  }
++
+   private boolean matches(VarType[] left, VarType[] right) {
+     if (left.length == right.length) {
+       for (int i = 0; i < left.length; i++) {
+-- 
+2.16.1.windows.1
+
