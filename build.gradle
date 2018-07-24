@@ -11,7 +11,7 @@ patches {
 applyPatches.dependsOn.remove('updateSubmodules') // We don't want to update the submodule without asking. 
 
 allprojects {
-    group = 'net.minecraftforge' //put it under us for now, because this is a unofficial mirrior
+    group = 'lexmanos' //put it under us for now, because this is a unofficial mirrior
     version = gitVersion() // The tag should be OurVersion.FernFlowerCommitNumber, ex: 1.5.380
 }
 def gitVersion() {
