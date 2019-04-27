@@ -1,11 +1,11 @@
-From f87451bc08a6643fda4b41ca96d57f8bdc6de288 Mon Sep 17 00:00:00 2001
+From bad319a80217fadb00fc8926e480cb99274c35f6 Mon Sep 17 00:00:00 2001
 From: LexManos <LexManos@gmail.com>
 Date: Wed, 12 Apr 2017 10:51:55 -0700
 Subject: [PATCH] Fix field initalizers
 
 
 diff --git a/src/org/jetbrains/java/decompiler/main/InitializerProcessor.java b/src/org/jetbrains/java/decompiler/main/InitializerProcessor.java
-index bec95a5..94ec37f 100644
+index bec95a5..482f966 100644
 --- a/src/org/jetbrains/java/decompiler/main/InitializerProcessor.java
 +++ b/src/org/jetbrains/java/decompiler/main/InitializerProcessor.java
 @@ -3,6 +3,7 @@ package org.jetbrains.java.decompiler.main;
@@ -175,7 +175,7 @@ index bec95a5..94ec37f 100644
      List<Exprent> lst = exprent.getAllExprents(true);
      lst.add(exprent);
  
-@@ -283,7 +326,18 @@ public class InitializerProcessor {
+@@ -283,7 +326,20 @@ public class InitializerProcessor {
            }
            break;
          case Exprent.EXPRENT_FIELD:
@@ -190,7 +190,9 @@ index bec95a5..94ec37f 100644
 +            }
 +          }
 +          else if (!fexpr.isStatic()) {
-+            return false;
++            if (fexpr.getInstance() != null && !isExprentIndependent(fexpr.getInstance(), method, cl, whitelist, fidx)) {
++              return false;
++            }
 +          }
        }
      }
@@ -429,5 +431,5 @@ index 8a77fe0..6e31d5c 100644
  }
 \ No newline at end of file
 -- 
-2.17.1 (Apple Git-112)
+2.19.1.windows.1
 
